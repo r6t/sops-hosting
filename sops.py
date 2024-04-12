@@ -15,6 +15,7 @@ iam_user_parameter = template.add_parameter(Parameter(
 sops_key = template.add_resource(Key(
     "SOPSKey",
     Description="KMS Key used for: repository storage, encryption of secrets within SOPS",  
+    EnableKeyRotation=True,
     KeyPolicy={
         "Version": "2012-10-17",
         "Id": "key-default-1",
@@ -45,7 +46,7 @@ sops_key = template.add_resource(Key(
 
 sops_repo = template.add_resource(Repository(
     "SOPSRepo",
-    RepositoryName=Join("-", [Ref(iam_user_parameter), "sops"]),
+    RepositoryName=Join("-", ["sops", Ref(iam_user_parameter)]),
     RepositoryDescription=Join("", ["SOPS repo for user/", Ref(iam_user_parameter)]),
     KmsKeyId=Ref(sops_key)
 ))

@@ -14,6 +14,7 @@ Resources:
   SOPSKey:
     Properties:
       Description: 'KMS Key used for: repository storage, encryption of secrets within SOPS'
+      EnableKeyRotation: true
       KeyPolicy:
         Id: key-default-1
         Statement:
@@ -54,6 +55,6 @@ Resources:
           - !Ref 'IAMUserParam'
       RepositoryName: !Join
         - '-'
-        - - !Ref 'IAMUserParam'
-          - sops
+        - - sops
+          - !Ref 'IAMUserParam'
     Type: AWS::CodeCommit::Repository
