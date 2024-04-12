@@ -1,0 +1,59 @@
+Description: 'SOPS hosting stack: KMS, CodeCommit'
+Outputs:
+  KmsKeyARN:
+    Description: SOPS KMS Key ARN
+    Value: !GetAtt 'SOPSKey.Arn'
+  RepoURL:
+    Description: SOPS CodeCommit repo URL
+    Value: !GetAtt 'SOPSRepo.CloneUrlHttp'
+Parameters:
+  IAMUserParam:
+    Description: Name of the local IAM user that owns these SOPS resources
+    Type: String
+Resources:
+  SOPSKey:
+    Properties:
+      Description: 'KMS Key used for: repository storage, encryption of secrets within SOPS'
+      KeyPolicy:
+        Id: key-default-1
+        Statement:
+          - Action: kms:*
+            Effect: Allow
+            Principal:
+              AWS: !Join
+                - ':'
+                - - 'arn:aws:iam:'
+                  - !Ref 'AWS::AccountId'
+                  - root
+            Resource: '*'
+            Sid: SOPS Key ownership
+          - Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+            Effect: Allow
+            Principal:
+              AWS: !Join
+                - ''
+                - - 'arn:aws:iam::'
+                  - !Ref 'AWS::AccountId'
+                  - :user/
+                  - !Ref 'IAMUserParam'
+            Resource: '*'
+            Sid: SOPS Key use
+        Version: '2012-10-17'
+    Type: AWS::KMS::Key
+  SOPSRepo:
+    Properties:
+      KmsKeyId: !Ref 'SOPSKey'
+      RepositoryDescription: !Join
+        - ''
+        - - SOPS repo for user/
+          - !Ref 'IAMUserParam'
+      RepositoryName: !Join
+        - '-'
+        - - !Ref 'IAMUserParam'
+          - sops
+    Type: AWS::CodeCommit::Repository
